@@ -6,12 +6,51 @@
   // import the type for the data we are going to receive from the server || +page.ts
   import type { PageData } from "./$types";
 
+  // import tabulator to use it in the table component
+  import { Tabulator } from "tabulator-tables";
+
+  // define types for typescript
+  type tableDatatype = any[];
+  type columnDataType = any[];
+
+  // create a table action for making the table reactive
+  // read more about svelte actions here https://svelte.dev/tutorial/actions
+  function tableAction(
+    node: string | HTMLElement,
+    { data, columns }: { data: tableDatatype; columns: columnDataType }
+  ) {
+    let table = new Tabulator(node, {
+      data,
+      columns,
+      layout: "fitColumns",
+    });
+
+    return {
+      update: ({ data }: { data: tableDatatype }) => table.replaceData(data),
+    };
+  }
+
   //  assign the data to a variable
   export let data: PageData;
 
   //  extract tableData from the data we received from the server and assign it to a variable
   //    starting with $: will make it reactive and will update the variable when the data changes on the server
-  $: tableData = data.tableData;
+  //  its possible to assign default values too
+  // or just use it with out a fallback i.e. $:tableDate = data.tableData
+  $: tableData = data.tableData.length
+    ? data.tableData
+    : [
+        {
+          id: 1,
+          name: "Leanne Graham",
+          email: "leanne Grahm",
+        },
+        {
+          id: 2,
+          name: "test name",
+          email: "test email",
+        },
+      ];
 
   //   declare a variable to hold the filter value
   let postIdFilter: string | null = null;
@@ -49,7 +88,25 @@
   <input type="number" name="ageFilter" bind:value={postIdFilter} />
 </label>
 
+<div
+  use:tableAction={{
+    data: tableData,
+    columns: [
+      //define the table columns
+      { title: "id", field: "id", editor: "input" },
+      { title: "Name", field: "name", editor: "input" },
+      { title: "Email", field: "email", editor: "input" },
+    ],
+  }}
+/>
 <!-- This is just to show the data change, To be replaced by table component -->
-<div>
+<!-- <div>
   {JSON.stringify(tableData, null, 2)}
-</div>
+</div> -->
+
+<svelte:head>
+  <link
+    href="https://unpkg.com/tabulator-tables@4.9.1/dist/css/tabulator.min.css"
+    rel="stylesheet"
+  />
+</svelte:head>
